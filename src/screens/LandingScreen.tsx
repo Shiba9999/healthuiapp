@@ -189,7 +189,6 @@ const LandingScreen = ({ navigation }: LandingScreenProps) => {
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
