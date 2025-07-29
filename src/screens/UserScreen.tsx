@@ -20,6 +20,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomButton from '../components/CustomButton';
 import { logoutUser } from '../reduxSlices/userSlice';
 import { RootState } from '../store';
+import { debugFilePath, uploadHealthVideo } from '../api/userScreenApi';
+import { setHealthResult } from '../reduxSlices/healthResultSlice';
+import Toast from 'react-native-toast-message';
 
 // Define the proper navigation types
 type RootStackParamList = {
@@ -45,8 +48,6 @@ const UserScreen: React.FC = () => {
   const [permissionStatus, setPermissionStatus] = useState<string>('');
 
   const device = useCameraDevice('front');
-  console.log("device", device);
-
   const camera = useRef<Camera>(null);
   const isFocused = useIsFocused();
 
@@ -251,30 +252,82 @@ const UserScreen: React.FC = () => {
     setCountdown(null);
   };
 
+  // const uploadVideo = async (videoPath: string) => {
+  //   setIsProcessing(true);
+  //   console.log("videoPath from upload video", videoPath);
+
+  //   try {
+  //     // Call the API to upload the video and get the result
+  //     const result = await uploadHealthVideo(videoPath);
+
+  //     console.log('Analysis Result:', result);
+
+  //     // Navigate to results screen with API response
+  //     (navigation as any).navigate('SkinToneResult', { result });
+
+  //   } catch (error) {
+  //     console.error('Upload Error:', error);
+
+  //     // More specific error messages
+  //     let errorMessage = 'Could not upload video. Please try again.';
+
+  //     if (error instanceof Error) {
+  //       if (error.message.includes('Network error')) {
+  //         errorMessage = 'Network connection failed. Please check your internet and try again.';
+  //       } else if (error.message.includes('Server error')) {
+  //         errorMessage = 'Server is currently unavailable. Please try again later.';
+  //       }
+  //     }
+
+  //     Alert.alert('Upload Failed', errorMessage);
+  //   } finally {
+  //     setIsProcessing(false);
+  //   }
+  // };
   const uploadVideo = async (videoPath: string) => {
     setIsProcessing(true);
+    console.log("videoPath from upload video", videoPath);
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // const ok = await debugFilePath(videoPath);
+    // if (!ok) {
+    //   Alert.alert('File Not Found', 'The recorded video file could not be found or accessed.');
+    //   setIsProcessing(false);
+    //   return; 
+    // }
 
     try {
-      // Hardcoded health analysis result
-      const result = {
-        stress_level: 35,
-        oxygen_level: 97,
-        heart_rate: 72,
-        confidence: 88,
-        skin_condition: "Good"
-      };
-
-      console.log('Analysis Result:', result);
+      const result = await uploadHealthVideo(videoPath);
+      console.log('Analysis result received:', result);
+      // Alert.alert('API Response', JSON.stringify(result, null, 2));
+      dispatch(setHealthResult(result));
       (navigation as any).navigate('SkinToneResult', { result });
+
     } catch (error) {
       console.error('Upload Error:', error);
-      Alert.alert('Upload Failed', 'Could not upload video. Please try again.');
+
+      // let errorMessage: any = 'Could not upload video. Please try again.';
+
+      // // Extract error message from the error object
+      // if (error && typeof error === 'object' && 'error' in error) {
+      //   errorMessage = error.error;
+      // } else if (error instanceof Error) {
+      //   errorMessage = error.message;
+      // } else if (typeof error === 'string') {
+      //   errorMessage = error;
+      // }
+
+      Toast.show({
+        type: 'error',
+        text1: 'Insufficient video data',
+        visibilityTime: 4000,
+      });
+
     } finally {
       setIsProcessing(false);
     }
   };
+
 
   // Permission screen
   if (!hasPermission) {

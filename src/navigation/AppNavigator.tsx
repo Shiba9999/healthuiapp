@@ -16,8 +16,6 @@ const AppNavigator = () => {
   const user = useSelector((state: RootState) => state.user.registeredUser);
   const isLoggedIn = useSelector((state: RootState) => state.user.isLoggedIn);
   
-  console.log("user:", user);
-  console.log("isLoggedIn:", isLoggedIn);
 
   // Determine initial route based on login status and user type
   let initialRouteName = 'Landing';
@@ -25,6 +23,7 @@ const AppNavigator = () => {
     initialRouteName = user.type === 'admin' ? 'AdminDashboard' : 'UserTabs';
   }
 
+  
   return (
     <Stack.Navigator initialRouteName={initialRouteName}>
       {/* Always include all screens - just control visibility via initialRoute and navigation logic */}
