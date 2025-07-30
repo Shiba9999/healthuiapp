@@ -9,6 +9,28 @@ import {
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
+// For the date
+const today = new Date();
+const todayStr = today.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+
+// Two hardcoded previous analysis data
+const previousResults = [
+  {
+    date: 'June 29, 2025',
+    heartRate: 78.12,
+    spo2: 97.15,
+    stress: 'Medium',
+    note: 'Slightly elevated stress detected. Consider relaxation.',
+  },
+  {
+    date: 'July 10, 2025',
+    heartRate: 82.00,
+    spo2: 95.54,
+    stress: 'Low',
+    note: 'All metrics within normal range.',
+  },
+];
+
 type SkinToneResultRouteProp = RouteProp<RootStackParamList, 'SkinToneResult'>;
 
 const SkinToneResult = () => {
@@ -16,12 +38,17 @@ const SkinToneResult = () => {
   const navigation = useNavigation();
   const { result } = route.params;
 
-  const heartRate = result.message.heart_rate;
-  const note = result.message.note;
-  const spo2 = result.message.spo2_estimate;
-  const stress = result.message.stress;
+  // Prepare current result with today’s date
+  const todayResult = {
+    date: todayStr,
+    heartRate: result.message.heart_rate,
+    spo2: result.message.spo2_estimate,
+    stress: result.message.stress,
+    note: result.message.note || 'No additional notes.',
+  };
 
- 
+  // Combine current and previous results, putting today’s result first
+  const allResults = [todayResult, ...previousResults];
 
   const goBackToCamera = () => navigation.goBack();
 
@@ -30,31 +57,35 @@ const SkinToneResult = () => {
       <View style={styles.content}>
         <Text style={styles.heading}>Health Analysis Results</Text>
 
-        <View style={styles.metricsBlock}>
-          <View style={styles.metricRow}>
-            <Text style={styles.metricLabel}>Heart Rate:</Text>
-            <Text style={styles.metricValue}>
-              {typeof heartRate === 'number' ? `${heartRate} BPM` : '-'}
+        {allResults.map((data, idx) => (
+          <View style={styles.metricsBlock} key={idx}>
+            <Text style={styles.dateText}>
+              {data.date} {idx === 0 ? '(Today)' : ''}
             </Text>
+            <View style={styles.metricRow}>
+              <Text style={styles.metricLabel}>Heart Rate:</Text>
+              <Text style={styles.metricValue}>
+                {typeof data.heartRate === 'number' ? `${data.heartRate} BPM` : '-'}
+              </Text>
+            </View>
+            <View style={styles.metricRow}>
+              <Text style={styles.metricLabel}>SpO₂:</Text>
+              <Text style={styles.metricValue}>
+                {typeof data.spo2 === 'number' ? `${data.spo2}%` : '-'}
+              </Text>
+            </View>
+            <View style={styles.metricRow}>
+              <Text style={styles.metricLabel}>Stress Level:</Text>
+              <Text style={styles.metricValue}>
+                {data.stress ? data.stress : '-'}
+              </Text>
+            </View>
+            <View style={styles.noteCard}>
+              <Text style={styles.noteIcon}>ℹ️</Text>
+              <Text style={styles.noteText}>{data.note}</Text>
+            </View>
           </View>
-          <View style={styles.metricRow}>
-            <Text style={styles.metricLabel}>SpO₂:</Text>
-            <Text style={styles.metricValue}>
-              {typeof spo2 === 'number' ? `${spo2}%` : '-'}
-            </Text>
-          </View>
-          <View style={styles.metricRow}>
-            <Text style={styles.metricLabel}>Stress Level:</Text>
-            <Text style={styles.metricValue}>
-              {stress ? stress : '-'}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.noteCard}>
-          <Text style={styles.noteIcon}>ℹ️</Text>
-          <Text style={styles.noteText}>{note || 'No additional notes.'}</Text>
-        </View>
+        ))}
 
         <TouchableOpacity style={styles.actionButton} onPress={goBackToCamera}>
           <Text style={styles.actionButtonText}>Analyze Again</Text>
@@ -95,6 +126,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 7,
   },
+  dateText: {
+    fontSize: 14,
+    color: '#3182ce',
+    fontWeight: '600',
+    marginBottom: 8,
+    textAlign: 'right',
+  },
   metricRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -116,7 +154,7 @@ const styles = StyleSheet.create({
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 22,
+    marginBottom: 6,
     borderLeftWidth: 5,
     borderLeftColor: '#3182ce',
   },
