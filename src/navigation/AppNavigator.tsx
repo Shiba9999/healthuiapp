@@ -9,6 +9,7 @@ import AdminScreen from '../screens/AdminScreen';
 import UserTabNavigator from './UserTabNavigator';
 import { RootState } from '../store';
 import SkinToneResult from '../screens/SkinToneResultScreen';
+import UserHealthDetails from '../screens/UserHealthDetails';
 
 const Stack = createNativeStackNavigator();
 
@@ -80,6 +81,15 @@ const AppNavigator = () => {
           title: 'Health Analysis Results',
           headerShown: true,
           headerBackVisible: true
+        }}
+      />
+      <Stack.Screen
+        name="UserHealthDetail"
+        component={UserHealthDetails}
+        options={{
+          title: 'User Health Detail',
+          headerShown: true,
+          headerBackVisible: false
         }}
       />
     </Stack.Navigator>

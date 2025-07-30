@@ -16,6 +16,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import { loginUser } from '../reduxSlices/userSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setLoggedInUser } from '../reduxSlices/loggedInUserSlice';
 
 type RootStackParamList = {
   Landing: undefined;
@@ -45,6 +47,153 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
     console.log("registeredUser", registeredUser);
   }, []);
 
+  // const handleLogin = async () => {
+  //   if (!userName || !password) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Missing Information',
+  //       text2: 'Please enter both username and password',
+  //     });
+  //     return;
+  //   }
+
+  //   if (!registeredUser) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'No Account Found',
+  //       text2: 'Please sign up first',
+  //     });
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+    
+  //   try {
+  //     // Simulate loading for better UX
+  //     await new Promise(resolve => setTimeout(resolve, 1000));
+      
+  //     if (registeredUser.userName === userName && registeredUser.password === password) {
+  //       Toast.show({
+  //         type: 'success',
+  //         text1: 'Login Successful',
+  //         text2: `Welcome back, ${registeredUser.fullName}!`,
+  //       });
+        
+  //       // Dispatch login first
+  //       dispatch(loginUser());
+        
+  //       // Then navigate after a short delay to ensure state is updated
+  //       setTimeout(() => {
+  //         try {
+  //           if (registeredUser.type === 'admin') {
+  //             navigation.reset({
+  //               index: 0,
+  //               routes: [{ name: 'AdminDashboard' }],
+  //             });
+  //           } else {
+  //             navigation.reset({
+  //               index: 0,
+  //               routes: [{ name: 'UserTabs' }],
+  //             });
+  //           }
+  //         } catch (navError) {
+  //           console.error('Navigation error:', navError);
+  //           // Fallback navigation
+  //           navigation.navigate(registeredUser.type === 'admin' ? 'AdminDashboard' : 'UserTabs');
+  //         }
+  //       }, 100);
+        
+  //     } else {
+  //       Toast.show({
+  //         type: 'error',
+  //         text1: 'Invalid Credentials',
+  //         text2: 'Please check your username and password',
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Login error:', error);
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Login Error',
+  //       text2: 'Something went wrong. Please try again.',
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+  // const handleLogin = async () => {
+  //   if (!userName || !password) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Missing Information',
+  //       text2: 'Please enter both username and password',
+  //     });
+  //     return;
+  //   }
+  
+  //   if (!registeredUser) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'No Account Found',
+  //       text2: 'Please sign up first',
+  //     });
+  //     return;
+  //   }
+  
+  //   setIsLoading(true);
+  
+  //   try {
+  //     await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  //     if (registeredUser.userName === userName && registeredUser.password === password) {
+  //       Toast.show({
+  //         type: 'success',
+  //         text1: 'Login Successful',
+  //         text2: `Welcome back, ${registeredUser.fullName}!`,
+  //       });
+  
+  //       // Store user data in AsyncStorage (stringify if needed)
+  //       await AsyncStorage.setItem('loggedInUser', JSON.stringify(registeredUser));
+  
+  //       // Dispatch login
+  //       dispatch(loginUser());
+  
+  //       setTimeout(() => {
+  //         try {
+  //           if (registeredUser.type === 'admin') {
+  //             navigation.reset({
+  //               index: 0,
+  //               routes: [{ name: 'AdminDashboard' }],
+  //             });
+  //           } else {
+  //             navigation.reset({
+  //               index: 0,
+  //               routes: [{ name: 'UserTabs' }],
+  //             });
+  //           }
+  //         } catch (navError) {
+  //           console.error('Navigation error:', navError);
+  //           navigation.navigate(registeredUser.type === 'admin' ? 'AdminDashboard' : 'UserTabs');
+  //         }
+  //       }, 100);
+  //     } else {
+  //       Toast.show({
+  //         type: 'error',
+  //         text1: 'Invalid Credentials',
+  //         text2: 'Please check your username and password',
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Login error:', error);
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Login Error',
+  //       text2: 'Something went wrong. Please try again.',
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
   const handleLogin = async () => {
     if (!userName || !password) {
       Toast.show({
@@ -54,7 +203,7 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
       });
       return;
     }
-
+  
     if (!registeredUser) {
       Toast.show({
         type: 'error',
@@ -63,24 +212,32 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
       });
       return;
     }
-
+  
     setIsLoading(true);
-    
+  
     try {
-      // Simulate loading for better UX
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+  
       if (registeredUser.userName === userName && registeredUser.password === password) {
         Toast.show({
           type: 'success',
           text1: 'Login Successful',
           text2: `Welcome back, ${registeredUser.fullName}!`,
         });
-        
-        // Dispatch login first
+  
+        // Store user data ONLY if type is 'user'
+        if (registeredUser.type === 'user') {
+          dispatch(setLoggedInUser(registeredUser));
+          await AsyncStorage.setItem('loggedInUser', JSON.stringify(registeredUser));
+        } else {
+          // For admin, optionally clear stored user data (or skip storing)
+          await AsyncStorage.removeItem('loggedInUser');
+        }
+  
+        // Dispatch login action
         dispatch(loginUser());
-        
-        // Then navigate after a short delay to ensure state is updated
+  
+        // Navigate accordingly
         setTimeout(() => {
           try {
             if (registeredUser.type === 'admin') {
@@ -96,11 +253,9 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
             }
           } catch (navError) {
             console.error('Navigation error:', navError);
-            // Fallback navigation
             navigation.navigate(registeredUser.type === 'admin' ? 'AdminDashboard' : 'UserTabs');
           }
         }, 100);
-        
       } else {
         Toast.show({
           type: 'error',
@@ -119,7 +274,7 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
       setIsLoading(false);
     }
   };
-
+  
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
