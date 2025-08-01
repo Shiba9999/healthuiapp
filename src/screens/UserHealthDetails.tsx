@@ -1,37 +1,39 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';  // Adjust path as per your project
+import { RouteProp, useRoute } from '@react-navigation/native';
+
+type RootStackParamList = {
+  UserHealthDetail: { healthData: any; userName: string };
+};
+
+type UserHealthDetailRouteProp = RouteProp<RootStackParamList, 'UserHealthDetail'>;
 
 const UserHealthDetails = () => {
-  const healthResData = useSelector((state: RootState) => state.health.result);
-
-  // Defensive: handle if data missing or loading
-  const data = healthResData?.message || {};
+  const route = useRoute<UserHealthDetailRouteProp>();
+  const data = route.params.healthData?.message || {};
+  const userName = route.params.userName || '';
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>Health Analysis Details</Text>
-
+      <Text style={styles.heading}>Health Details of {userName}</Text>
       <View style={styles.card}>
         <Text style={styles.label}>Heart Rate</Text>
         <Text style={styles.value}>
-          {typeof data.heart_rate === 'number' ? `${data.heart_rate.toFixed(1)} BPM` : '—'}
+        {typeof data.heart_rate === 'number' ? `${data.heart_rate} BPM` : '—'}
+
         </Text>
       </View>
-
       <View style={styles.card}>
         <Text style={styles.label}>SpO₂ Estimate</Text>
         <Text style={styles.value}>
-          {typeof data.spo2_estimate === 'number' ? `${data.spo2_estimate.toFixed(1)}%` : '—'}
+        {typeof data.spo2_estimate === 'number' ? `${data.spo2_estimate}%` : '—'}
+
         </Text>
       </View>
-
       <View style={styles.card}>
         <Text style={styles.label}>Stress Level</Text>
         <Text style={styles.value}>{data.stress ?? '—'}</Text>
       </View>
-
       <View style={[styles.card, styles.noteCard]}>
         <Text style={styles.noteLabel}>Note</Text>
         <Text style={styles.noteText}>{data.note || 'No additional notes.'}</Text>

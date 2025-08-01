@@ -11,7 +11,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../reduxSlices/userSlice';
 import { RootState } from '../store';
-import { useNavigation, StackActions } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type RootStackParamList = {
@@ -22,7 +22,7 @@ type RootStackParamList = {
   AdminDashboard: undefined;
   UserTabs: undefined;
   SkinToneResult: { result: any };
-  UserHealthDetail: undefined; // Your detail screen route
+  UserHealthDetail: { healthData: any; userName: string };
 };
 
 interface User {
@@ -30,6 +30,7 @@ interface User {
   fullName: string;
   type: string;
   password: string;
+  healthData?: any;
 }
 
 const AdminScreen = () => {
@@ -37,9 +38,48 @@ const AdminScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const isLoggedIn = useSelector((state: RootState) => state.user.isLoggedIn);
   const loggedInUserData = useSelector((state: RootState) => state.logged.user);
+  const healthResData = useSelector((state: RootState) => state.health.result);
 
-  // Example users array — replace with your actual source if needed
-  const users = loggedInUserData ? [loggedInUserData] : [];
+  // Two hardcoded demo users with demo health data
+  const demoUsers: User[] = [
+    {
+      userName: 'aksh',
+      fullName: 'akash',
+      type: 'user',
+      password: 'password123',
+      healthData: {
+        message: {
+          heart_rate: 72.1,
+          spo2_estimate: 96.5,
+          stress: 'Medium',
+          note: 'Keep hydrated and relax.',
+        },
+      },
+    },
+    {
+      userName: 'subhashis',
+      fullName: 'subhashis',
+      type: 'user',
+      password: 'alicepass',
+      healthData: {
+        message: {
+          heart_rate: 80.6,
+          spo2_estimate: 97.0,
+          stress: 'High',
+          note: 'Stress levels high. Recommend meditation.',
+        },
+      },
+    },
+  ];
+
+  // Attach real health data to logged-in user (if any)
+  const actualUser = loggedInUserData
+    ? { ...loggedInUserData, healthData: healthResData }
+    : null;
+  // Compose user array: actual user at top, no dupes
+  const users = actualUser
+    ? [actualUser, ...demoUsers.filter(u => u.userName !== actualUser.userName)]
+    : demoUsers;
 
   React.useEffect(() => {
     if (!isLoggedIn) {
@@ -55,10 +95,9 @@ const AdminScreen = () => {
   };
 
   const handleUserCardPress = (user: User) => {
-    // Navigate to UserHealthDetail screen
     navigation.navigate('UserHealthDetail', {
-      // you can pass params here if needed, like user id or userName
-      // e.g., userName: user.userName
+      healthData: user.healthData || null,
+      userName: user.userName,
     });
   };
 
